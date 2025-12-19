@@ -69,7 +69,7 @@ def youtube_gen():
     try:
         # Groq Request (Using Llama 3 Model)
         completion = groq_client.chat.completions.create(
-            model="llama3-8b-8192",  # Bahut Fast Model hai
+            model="llama-3.1-8b-instant",  # Bahut Fast Model hai
             messages=[
                 {"role": "system", "content": "You are a helpful AI assistant."},
                 {"role": "user", "content": prompt}
