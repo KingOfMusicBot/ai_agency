@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-10">
+    <h1 class="text-3xl font-bold mb-8 border-b border-gray-700 pb-4">
+        👮 Admin Dashboard
+    </h1>
+
+    <div class="grid gap-6">
+        {% for q in queries %}
+        <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 shadow-lg relative">
+            
+            <span class="absolute top-4 right-4 bg-primary text-black text-xs font-bold px-2 py-1 rounded">
+                {{ q.service_type }}
+            </span>
+
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xl mr-3">
+                    👤
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg">{{ q.user_name }}</h3>
+                    <p class="text-sm text-gray-400">{{ q.user_email }}</p>
+                </div>
+            </div>
+
+            <div class="bg-black/50 p-4 rounded-lg border border-gray-700">
+                <p class="text-gray-300 italic">"{{ q.message }}"</p>
+            </div>
+
+            <div class="mt-4 text-xs text-gray-500 flex justify-between">
+                <span>📅 Date: {{ q.date.strftime('%Y-%m-%d %H:%M') }}</span>
+                <span class="text-yellow-500">Status: {{ q.status }}</span>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center text-gray-500 py-20">
+            <h3>📭 Koi naya message nahi hai.</h3>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
