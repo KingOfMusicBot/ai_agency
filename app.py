@@ -111,7 +111,7 @@ def admin_panel():
         return redirect(url_for('login'))
     
     # Yahan apni Email ID dalein jo Admin banegi
-    admin_email = "aapki_email@gmail.com"
+    admin_email = "rajkoushal862@gmail.com"
     
     if session['user']['email'] != admin_email:
         return "<h1>🚫 Access Denied!</h1>"
