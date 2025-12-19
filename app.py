@@ -215,6 +215,12 @@ def update_query(id):
     flash(f"✅ Status updated to {new_status}")
     return redirect(url_for('admin_panel'))
 
+# --- ERROR HANDLERS ---
+@app.errorhandler(404)
+def page_not_found(e):
+    # 404 aane par user ko '404.html' dikhao
+    return render_template('404.html'), 404
+    
 if __name__ == '__main__':
     # Running on Port 5001
     app.run(host='0.0.0.0', port=5001, debug=True)
