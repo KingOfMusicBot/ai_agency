@@ -26,8 +26,8 @@
 </head>
 <body class="bg-gray-100 dark:bg-darkbg text-gray-800 dark:text-gray-200 transition-colors duration-300 font-sans">
 
-    <nav class="fixed w-full z-50 bg-white/90 dark:bg-black/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+    <nav class="fixed w-full z-50 bg-white/95 dark:bg-black/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-lg">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center relative">
             
             <a href="/" class="text-xl md:text-2xl font-bold uppercase tracking-widest flex items-center gap-2">
                 <i class="fas fa-robot text-primary"></i>
@@ -36,9 +36,13 @@
             
             <div class="flex items-center gap-4">
                 
-                <button onclick="toggleDarkMode()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition border border-gray-300 dark:border-gray-700">
+                <button onclick="toggleDarkMode()" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition border border-gray-300 dark:border-gray-700">
                     <i class="fas fa-moon dark:hidden text-gray-800"></i>
                     <i class="fas fa-sun hidden dark:block text-yellow-400"></i>
+                </button>
+
+                <button onclick="toggleMenu()" class="md:hidden text-2xl text-gray-800 dark:text-white focus:outline-none">
+                    <i id="menu-icon" class="fas fa-bars"></i>
                 </button>
 
                 <div class="hidden md:flex items-center space-x-6 border-l border-gray-600 pl-6">
@@ -47,22 +51,36 @@
                     <a href="/#contact" class="hover:text-primary transition font-medium">Contact</a>
 
                     {% if user %}
-                        <a href="/dashboard" class="text-primary font-bold">Dashboard</a>
-                        <a href="/logout" class="text-red-500"><i class="fas fa-power-off"></i></a>
+                        <a href="/dashboard" class="bg-gray-800 px-4 py-2 rounded-lg text-primary font-bold hover:bg-gray-700 transition">Dashboard</a>
+                        <a href="/logout" class="text-red-500 hover:text-red-400" title="Logout"><i class="fas fa-power-off"></i></a>
                     {% else %}
                         <a href="/login" class="text-gray-400 hover:text-white">Login</a>
-                        <a href="/signup" class="bg-primary text-black px-4 py-1 rounded-full font-bold hover:bg-cyan-400">Sign Up</a>
+                        <a href="/signup" class="bg-primary text-black px-4 py-2 rounded-full font-bold hover:bg-cyan-400 transition">Sign Up</a>
                     {% endif %}
                 </div>
 
-                <div class="md:hidden">
-                    {% if user %}
-                        <a href="/dashboard" class="text-primary mr-3 text-sm font-bold">Dashboard</a>
-                    {% else %}
-                        <a href="/login" class="text-white bg-secondary px-3 py-1 rounded text-sm mr-2">Login</a>
-                    {% endif %}
-                </div>
+            </div>
+        </div>
 
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-white dark:bg-cardbg border-b border-gray-200 dark:border-gray-800 shadow-2xl transition-all duration-300 ease-in-out">
+            <div class="flex flex-col p-6 space-y-4">
+                <a href="/" onclick="toggleMenu()" class="block text-lg font-medium hover:text-primary border-b border-gray-700 pb-2">Home</a>
+                <a href="/#services" onclick="toggleMenu()" class="block text-lg font-medium hover:text-primary border-b border-gray-700 pb-2">Services</a>
+                <a href="/#portfolio" onclick="toggleMenu()" class="block text-lg font-medium hover:text-primary border-b border-gray-700 pb-2">Portfolio</a>
+                <a href="/#contact" onclick="toggleMenu()" class="block text-lg font-medium hover:text-primary border-b border-gray-700 pb-2">Contact</a>
+                
+                {% if user %}
+                    <div class="pt-2">
+                        <p class="text-sm text-gray-500 mb-2">Signed in as: <span class="text-white">{{ user.name }}</span></p>
+                        <a href="/dashboard" onclick="toggleMenu()" class="block w-full text-center bg-gray-800 text-primary font-bold py-3 rounded-lg mb-2">Go to Dashboard</a>
+                        <a href="/logout" onclick="toggleMenu()" class="block w-full text-center bg-red-600 text-white font-bold py-3 rounded-lg">Logout</a>
+                    </div>
+                {% else %}
+                    <div class="flex flex-col gap-3 pt-2">
+                        <a href="/login" onclick="toggleMenu()" class="block w-full text-center border border-gray-600 py-3 rounded-lg hover:border-white transition">Login</a>
+                        <a href="/signup" onclick="toggleMenu()" class="block w-full text-center bg-primary text-black font-bold py-3 rounded-lg hover:bg-cyan-400 transition">Create Account</a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -88,6 +106,7 @@
     </footer>
 
     <script>
+        // Dark Mode Logic
         function toggleDarkMode() {
             const html = document.documentElement;
             if (html.classList.contains('dark')) {
@@ -102,6 +121,22 @@
             document.documentElement.classList.remove('dark');
         } else {
             document.documentElement.classList.add('dark');
+        }
+
+        // Mobile Menu Logic (3-Line Toggle)
+        function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('menu-icon');
+            
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times'); // Change to X icon
+            } else {
+                menu.classList.add('hidden');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars'); // Back to bars
+            }
         }
     </script>
 </body>
