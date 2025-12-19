@@ -37,20 +37,25 @@ except Exception as e:
     print(f"❌ Groq Connection Error: {e}")
 
 # --- EMAIL FUNCTION (NEW) ---
+# --- EMAIL FUNCTION (UPDATED FOR PORT 587) ---
 def send_email_alert(subject, body):
     try:
         msg = MIMEText(body)
         msg['Subject'] = subject
         msg['From'] = MAIL_SENDER
-        msg['To'] = ADMIN_EMAIL # Admin ko bhejo
+        msg['To'] = ADMIN_EMAIL 
 
-        # Gmail Server Connection
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
-            smtp_server.login(MAIL_SENDER, MAIL_PASSWORD)
-            smtp_server.sendmail(MAIL_SENDER, ADMIN_EMAIL, msg.as_string())
+        # Gmail Server Connection (Using Port 587 + STARTTLS)
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()  # Connection ko secure banata hai
+        server.login(MAIL_SENDER, MAIL_PASSWORD)
+        server.sendmail(MAIL_SENDER, ADMIN_EMAIL, msg.as_string())
+        server.quit()
+        
         print("📧 Email Alert Sent!")
     except Exception as e:
         print(f"❌ Email Error: {e}")
+
 
 # --- ROUTES ---
 
