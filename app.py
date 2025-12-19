@@ -6,8 +6,6 @@ import os
 import datetime
 from bson.objectid import ObjectId
 from groq import Groq
-import smtplib # Email Library
-from email.mime.text import MIMEText # Email Format
 
 # Environment Variables Load
 load_dotenv()
@@ -16,10 +14,8 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "super_secret_key")
 
 # --- CONFIGURATION ---
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL") # Jahan Notification aayega
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 MONGO_URI = os.getenv("MONGO_URI")
-MAIL_SENDER = os.getenv("MAIL_SENDER") # Jo Email Bhejega (Aapki hi ID)
-MAIL_PASSWORD = os.getenv("MAIL_PASSWORD") # App Password
 
 # --- 1. Database Connection ---
 try:
@@ -36,32 +32,12 @@ try:
 except Exception as e:
     print(f"❌ Groq Connection Error: {e}")
 
-# --- EMAIL FUNCTION (NEW) ---
-# --- EMAIL FUNCTION (UPDATED FOR PORT 587) ---
-def send_email_alert(subject, body):
-    try:
-        msg = MIMEText(body)
-        msg['Subject'] = subject
-        msg['From'] = MAIL_SENDER
-        msg['To'] = ADMIN_EMAIL 
-
-        # Gmail Server Connection (Using Port 587 + STARTTLS)
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()  # Connection ko secure banata hai
-        server.login(MAIL_SENDER, MAIL_PASSWORD)
-        server.sendmail(MAIL_SENDER, ADMIN_EMAIL, msg.as_string())
-        server.quit()
-        
-        print("📧 Email Alert Sent!")
-    except Exception as e:
-        print(f"❌ Email Error: {e}")
-
-
 # --- ROUTES ---
 
 @app.route('/')
 def home():
     user = session.get('user')
+    # Fetch Reviews & Projects for Home Page
     reviews = list(db.reviews.find().sort("date", -1).limit(6))
     projects = list(db.projects.find().sort("date", -1))
     return render_template('index.html', user=user, reviews=reviews, projects=projects)
@@ -71,15 +47,26 @@ def tools_page():
     user = session.get('user')
     return render_template('tools.html', user=user)
 
-# --- GROQ TOOLS (UPDATED MODEL) ---
+# --- GROQ AI TOOLS (Updated Model: llama-3.3-70b-versatile) ---
+
 @app.route('/api/youtube-gen', methods=['POST'])
 def youtube_gen():
     topic = request.form.get('topic')
-    prompt = f"Act as a YouTube Expert. Create 5 Clickbait Titles and 15 Tags for: '{topic}'. Format: Titles: (list) Tags: (comma separated)"
+    prompt = f"""
+    Act as a YouTube Expert. I am making a video about '{topic}'.
+    1. Generate 5 Viral Clickbait Titles (Catchy & SEO friendly).
+    2. Generate 15 Comma-separated High Ranking Tags.
+    Format output strictly:
+    Titles:
+    - Title 1...
+    Tags:
+    tag1, tag2...
+    """
     try:
         completion = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile", # Updated Model
-            messages=[{"role": "user", "content": prompt}], temperature=0.7
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
         )
         ai_text = completion.choices[0].message.content
         parts = ai_text.split("Tags:")
@@ -87,16 +74,26 @@ def youtube_gen():
         tags = parts[1].strip() if len(parts) > 1 else "No tags"
         return render_template('tool_result.html', result_type="youtube", titles=titles, tags=tags)
     except Exception as e:
-        return f"<h3 style='color:red'>Error: {e}</h3>"
+        return f"<h3 style='color:red'>Groq Error: {e}</h3>"
 
 @app.route('/api/insta-gen', methods=['POST'])
 def insta_gen():
     desc = request.form.get('desc')
-    prompt = f"Act as Social Media Manager. Create 5 Captions and 20 Hashtags for photo: '{desc}'. Format: Captions: (list) Hashtags: (space separated)"
+    prompt = f"""
+    Act as Social Media Manager. Photo description: '{desc}'.
+    1. Write 5 Engaging Captions.
+    2. Generate 20 Trending Hashtags.
+    Format output strictly:
+    Captions:
+    - Caption 1...
+    Hashtags:
+    #tag1 #tag2...
+    """
     try:
         completion = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile", # Updated Model
-            messages=[{"role": "user", "content": prompt}], temperature=0.7
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
         )
         ai_text = completion.choices[0].message.content
         parts = ai_text.split("Hashtags:")
@@ -104,9 +101,10 @@ def insta_gen():
         hashtags = parts[1].strip() if len(parts) > 1 else "#NoTags"
         return render_template('tool_result.html', result_type="instagram", captions=captions, hashtags=hashtags)
     except Exception as e:
-        return f"<h3 style='color:red'>Error: {e}</h3>"
+        return f"<h3 style='color:red'>Groq Error: {e}</h3>"
 
-# --- AUTH ROUTES ---
+# --- AUTH SYSTEM ---
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -119,10 +117,6 @@ def signup():
         hashed_password = generate_password_hash(password)
         db.users.insert_one({"name": name, "email": email, "password": hashed_password, "role": "user", "created_at": datetime.datetime.now()})
         session['user'] = {"name": name, "email": email, "role": "user"}
-        
-        # New Signup Alert
-        send_email_alert("🚀 New User Signup", f"Name: {name}\nEmail: {email}")
-        
         return redirect(url_for('dashboard'))
     return render_template('signup.html')
 
@@ -151,25 +145,18 @@ def dashboard():
     is_admin = (session['user']['email'] == ADMIN_EMAIL)
     return render_template('dashboard.html', user=session['user'], is_admin=is_admin)
 
-# --- QUERY & CONTACT FORM (WITH EMAIL ALERT) ---
+# --- USER ACTIONS ---
+
 @app.route('/submit-query', methods=['POST'])
 def submit_query():
     if 'user' not in session: return redirect(url_for('login'))
     data = request.form
-    
-    # 1. DB mein Save karo
     db.queries.insert_one({
         "user_email": session['user']['email'], "user_name": session['user']['name'],
         "service_type": data.get('service'), "message": data.get('message'),
         "status": "Pending", "date": datetime.datetime.now()
     })
-    
-    # 2. Email Alert Bhejo (New Logic)
-    subject = f"🔔 New Lead: {data.get('service')}"
-    body = f"Client: {session['user']['name']}\nEmail: {session['user']['email']}\n\nMessage:\n{data.get('message')}"
-    send_email_alert(subject, body)
-    
-    flash("✅ Query Sent! Check your email soon.")
+    flash("✅ Query Sent Successfully!")
     return redirect(url_for('dashboard'))
 
 @app.route('/submit-review', methods=['POST'])
@@ -182,6 +169,18 @@ def submit_review():
     flash("⭐ Review Added!")
     return redirect(url_for('home'))
 
+# --- ADMIN PANEL & MANAGEMENT ---
+
+@app.route('/admin')
+def admin_panel():
+    if 'user' not in session: return redirect(url_for('login'))
+    if session['user']['email'] != ADMIN_EMAIL: return f"🚫 Access Denied!"
+    
+    queries = list(db.queries.find().sort("date", -1))
+    projects = list(db.projects.find().sort("date", -1))
+    reviews = list(db.reviews.find().sort("date", -1))
+    return render_template('admin.html', queries=queries, projects=projects, reviews=reviews, user=session['user'])
+
 @app.route('/add-project', methods=['POST'])
 def add_project():
     if 'user' not in session or session['user']['email'] != ADMIN_EMAIL: return "🚫 Access Denied!"
@@ -190,7 +189,7 @@ def add_project():
         "image_url": request.form.get('image_url'), "description": request.form.get('description'),
         "date": datetime.datetime.now()
     })
-    flash("✅ New Project Added!")
+    flash("✅ Project Added!")
     return redirect(url_for('admin_panel'))
 
 @app.route('/delete-project/<id>')
@@ -200,13 +199,22 @@ def delete_project(id):
     flash("🗑️ Project Deleted!")
     return redirect(url_for('admin_panel'))
 
-@app.route('/admin')
-def admin_panel():
-    if 'user' not in session: return redirect(url_for('login'))
-    if session['user']['email'] != ADMIN_EMAIL: return f"🚫 Access Denied!"
-    queries = list(db.queries.find().sort("date", -1))
-    projects = list(db.projects.find().sort("date", -1))
-    return render_template('admin.html', queries=queries, projects=projects, user=session['user'])
+@app.route('/delete-review/<id>')
+def delete_review(id):
+    if 'user' not in session or session['user']['email'] != ADMIN_EMAIL: return "🚫 Access Denied!"
+    db.reviews.delete_one({"_id": ObjectId(id)})
+    flash("🗑️ Review Deleted!")
+    return redirect(url_for('admin_panel'))
+
+@app.route('/update-query/<id>')
+def update_query(id):
+    if 'user' not in session or session['user']['email'] != ADMIN_EMAIL: return "🚫 Access Denied!"
+    query = db.queries.find_one({"_id": ObjectId(id)})
+    new_status = "Completed" if query.get('status') == "Pending" else "Pending"
+    db.queries.update_one({"_id": ObjectId(id)}, {"$set": {"status": new_status}})
+    flash(f"✅ Status updated to {new_status}")
+    return redirect(url_for('admin_panel'))
 
 if __name__ == '__main__':
+    # Running on Port 5001
     app.run(host='0.0.0.0', port=5001, debug=True)
