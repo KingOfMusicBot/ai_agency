@@ -134,7 +134,25 @@ def submit_query():
         """
     except Exception as e:
         return f"Error saving query: {e}"
+# --- ADMIN PANEL SECTION ---
+@app.route('/admin')
+def admin_panel():
+    # Security: Check karein user logged in hai ya nahi
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    
+    # Security: Sirf AAPKI email id hi admin panel dekh sake
+    # Is line mein apni asli Gmail ID daal dena
+    admin_email = "ksdofficial84@gmail.com" 
+    
+    if session['user']['email'] != admin_email:
+        return "<h1>🚫 Access Denied! Sirf Admin yahan aa sakta hai.</h1>"
 
+    # Database se saari queries nikaalo (Newest first)
+    all_queries = list(db.queries.find().sort("date", -1))
+    
+    return render_template('admin.html', queries=all_queries, user=session['user'])
+    
 # --- Server Start ---
 if __name__ == '__main__':
     # 0.0.0.0 = Public Access
