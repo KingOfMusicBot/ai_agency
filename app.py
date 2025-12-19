@@ -24,7 +24,9 @@ except Exception as e:
 @app.route('/')
 def home():
     user = session.get('user')
-    return render_template('index.html', user=user)
+    # Database se latest 6 Reviews nikaalein
+    reviews = list(db.reviews.find().sort("date", -1).limit(6))
+    return render_template('index.html', user=user, reviews=reviews)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -33,23 +35,16 @@ def signup():
         email = request.form.get('email')
         password = request.form.get('password')
 
-        # Check agar user pehle se hai
         if db.users.find_one({"email": email}):
-            return "Email already registered! <a href='/login'>Login</a>"
+            flash("Email already registered! Please Login.")
+            return redirect(url_for('login'))
 
-        # Password ko secure (hash) karna
         hashed_password = generate_password_hash(password)
-
         user_data = {
-            "name": name,
-            "email": email,
-            "password": hashed_password,
-            "role": "user",  # Default role
-            "created_at": datetime.datetime.now()
+            "name": name, "email": email, "password": hashed_password,
+            "role": "user", "created_at": datetime.datetime.now()
         }
         db.users.insert_one(user_data)
-        
-        # Auto login after signup
         session['user'] = {"name": name, "email": email, "role": "user"}
         return redirect(url_for('dashboard'))
 
@@ -60,19 +55,14 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-
         user = db.users.find_one({"email": email})
 
-        # Password check karna
         if user and check_password_hash(user['password'], password):
-            session['user'] = {
-                "name": user['name'], 
-                "email": user['email'],
-                "role": user.get('role', 'user')
-            }
+            session['user'] = {"name": user['name'], "email": user['email'], "role": user.get('role', 'user')}
             return redirect(url_for('dashboard'))
         else:
-            return "❌ Wrong Email or Password! <a href='/login'>Try Again</a>"
+            flash("❌ Ghalat Email ya Password!")
+            return redirect(url_for('login'))
 
     return render_template('login.html')
 
@@ -83,41 +73,60 @@ def logout():
 
 @app.route('/dashboard')
 def dashboard():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if 'user' not in session: return redirect(url_for('login'))
     return render_template('dashboard.html', user=session['user'])
 
+# --- QUERY SYSTEM ---
 @app.route('/submit-query', methods=['POST'])
 def submit_query():
     if 'user' not in session:
+        flash("Please login to send a query.")
         return redirect(url_for('login'))
         
     data = request.form
-    query_doc = {
+    db.queries.insert_one({
         "user_email": session['user']['email'],
         "user_name": session['user']['name'],
         "service_type": data.get('service'),
         "message": data.get('message'),
         "status": "Pending",
         "date": datetime.datetime.now()
-    }
-    db.queries.insert_one(query_doc)
+    })
+    flash("✅ Query Submitted! Hum jaldi contact karenge.")
     return redirect(url_for('dashboard'))
+
+# --- FEEDBACK SYSTEM (NEW) ---
+@app.route('/submit-review', methods=['POST'])
+def submit_review():
+    if 'user' not in session:
+        flash("Review dene ke liye Login karein.")
+        return redirect(url_for('login'))
+    
+    rating = request.form.get('rating')
+    comment = request.form.get('comment')
+    
+    db.reviews.insert_one({
+        "user_name": session['user']['name'],
+        "rating": int(rating),
+        "comment": comment,
+        "date": datetime.datetime.now()
+    })
+    flash("⭐ Thanks for your feedback!")
+    return redirect(url_for('home'))
 
 # --- ADMIN PANEL ---
 @app.route('/admin')
 def admin_panel():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if 'user' not in session: return redirect(url_for('login'))
     
-    # Yahan apni Email ID dalein jo Admin banegi
+    # YAHAN APNI EMAIL DALEIN
     admin_email = "rajkoushal862@gmail.com"
     
     if session['user']['email'] != admin_email:
         return "<h1>🚫 Access Denied!</h1>"
 
-    all_queries = list(db.queries.find().sort("date", -1))
-    return render_template('admin.html', queries=all_queries, user=session['user'])
+    queries = list(db.queries.find().sort("date", -1))
+    return render_template('admin.html', queries=queries, user=session['user'])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
