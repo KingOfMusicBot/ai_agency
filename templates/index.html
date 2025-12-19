@@ -3,77 +3,120 @@
 {% block content %}
 
 <section class="h-screen flex flex-col justify-center items-center text-center px-4 relative overflow-hidden">
-    <div class="absolute inset-0 bg-[url('https://source.unsplash.com/1600x900/?technology,ai')] bg-cover opacity-20"></div>
-    <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-white to-secondary bg-clip-text text-transparent">
-        Marketing on Autopilot
-    </h1>
-    <p class="text-xl md:text-2xl text-gray-400 mb-8 max-w-2xl">
-        Hum aapke business ko AI Tools, Data-Driven Strategies aur Automation ke saath 10x grow karte hain.
-    </p>
-    <a href="#contact" class="bg-primary text-black font-bold px-8 py-3 rounded-full text-lg hover:shadow-[0_0_20px_#00f2ff] transition">
-        Start Project
-    </a>
+    <div class="absolute inset-0 bg-black">
+        <div class="absolute inset-0 bg-[url('https://cdn.pixabay.com/photo/2020/04/23/18/12/technology-5083653_1280.jpg')] bg-cover opacity-20"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black"></div>
+    </div>
+    
+    <div class="relative z-10 max-w-4xl">
+        <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-white to-secondary bg-clip-text text-transparent animate-pulse">
+            AI Marketing Revolution
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-300 mb-8">
+            Hum aapke business ko <span class="text-primary font-bold">Coding</span> aur <span class="text-secondary font-bold">AI Tools</span> se automate karte hain.
+        </p>
+        <div class="flex flex-col md:flex-row gap-4 justify-center">
+            <a href="#contact" class="bg-primary text-black font-bold px-8 py-3 rounded-full text-lg hover:shadow-[0_0_20px_#00f2ff] transition">
+                Start Project
+            </a>
+            <a href="#services" class="border border-white text-white font-bold px-8 py-3 rounded-full text-lg hover:bg-white hover:text-black transition">
+                View Services
+            </a>
+        </div>
+    </div>
 </section>
 
 <section id="services" class="py-20 container mx-auto px-6">
     <h2 class="text-4xl font-bold text-center mb-16"><span class="text-secondary">Our</span> Services</h2>
     <div class="grid md:grid-cols-3 gap-10">
-        <div class="p-8 bg-gray-900 rounded-2xl border border-gray-800 hover:border-primary transition group">
-            <i class="fas fa-robot text-4xl text-primary mb-4 group-hover:scale-110 transition"></i>
+        <div class="p-8 bg-cardbg rounded-2xl border border-gray-800 hover:border-primary transition group hover:-translate-y-2">
+            <i class="fas fa-robot text-4xl text-primary mb-4"></i>
             <h3 class="text-2xl font-bold mb-2">AI Chatbots</h3>
-            <p class="text-gray-400">24/7 Customer support automation jo kabhi sota nahi.</p>
+            <p class="text-gray-400">Telegram aur WhatsApp bots jo 24/7 kaam karein.</p>
         </div>
-        <div class="p-8 bg-gray-900 rounded-2xl border border-gray-800 hover:border-secondary transition group">
-            <i class="fas fa-chart-line text-4xl text-secondary mb-4 group-hover:scale-110 transition"></i>
-            <h3 class="text-2xl font-bold mb-2">Data Analytics</h3>
-            <p class="text-gray-400">Customer behavior predict karein aur sales badhayein.</p>
+        <div class="p-8 bg-cardbg rounded-2xl border border-gray-800 hover:border-secondary transition group hover:-translate-y-2">
+            <i class="fas fa-laptop-code text-4xl text-secondary mb-4"></i>
+            <h3 class="text-2xl font-bold mb-2">Web Development</h3>
+            <p class="text-gray-400">Fast aur Modern websites (Python/PHP Backend).</p>
         </div>
-        <div class="p-8 bg-gray-900 rounded-2xl border border-gray-800 hover:border-pink-500 transition group">
-            <i class="fas fa-bullhorn text-4xl text-pink-500 mb-4 group-hover:scale-110 transition"></i>
-            <h3 class="text-2xl font-bold mb-2">Smart Ads</h3>
-            <p class="text-gray-400">AI se optimize kiye gaye High-ROI Facebook ads.</p>
+        <div class="p-8 bg-cardbg rounded-2xl border border-gray-800 hover:border-pink-500 transition group hover:-translate-y-2">
+            <i class="fas fa-bullhorn text-4xl text-pink-500 mb-4"></i>
+            <h3 class="text-2xl font-bold mb-2">Social Growth</h3>
+            <p class="text-gray-400">Instagram/YouTube content strategy aur automation.</p>
         </div>
     </div>
 </section>
 
-<section id="portfolio" class="py-20 bg-black/50">
+<section class="py-20 bg-gray-900/50">
     <div class="container mx-auto px-6">
-        <h2 class="text-4xl font-bold text-center mb-16">Featured <span class="text-primary">Projects</span></h2>
-        <div class="grid md:grid-cols-2 gap-8">
-            <div class="relative group overflow-hidden rounded-xl">
-                <img src="https://source.unsplash.com/600x400/?coding" class="w-full transition duration-500 group-hover:scale-110">
-                <div class="absolute inset-0 bg-black/80 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition duration-300">
-                    <h3 class="text-2xl font-bold text-primary">E-Commerce AI</h3>
-                    <p class="text-gray-300">Sales Prediction Model</p>
+        <h2 class="text-4xl font-bold text-center mb-12">Client <span class="text-primary">Feedback</span></h2>
+        
+        <div class="grid md:grid-cols-3 gap-6 mb-12">
+            {% for review in reviews %}
+            <div class="bg-black p-6 rounded-xl border border-gray-800">
+                <div class="text-yellow-400 mb-2">
+                    {% for i in range(review.rating) %}★{% endfor %}
+                </div>
+                <p class="text-gray-300 italic mb-4">"{{ review.comment }}"</p>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-secondary rounded-full flex items-center justify-center font-bold text-white">
+                        {{ review.user_name[0] }}
+                    </div>
+                    <span class="font-bold text-sm">{{ review.user_name }}</span>
                 </div>
             </div>
-            <div class="relative group overflow-hidden rounded-xl">
-                <img src="https://source.unsplash.com/600x400/?marketing" class="w-full transition duration-500 group-hover:scale-110">
-                <div class="absolute inset-0 bg-black/80 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition duration-300">
-                    <h3 class="text-2xl font-bold text-secondary">Auto-Responder Bot</h3>
-                    <p class="text-gray-300">WhatsApp Automation</p>
-                </div>
+            {% else %}
+            <div class="col-span-3 text-center text-gray-500">
+                Abhi koi review nahi hai. Be the first!
             </div>
+            {% endfor %}
         </div>
+
+        {% if user %}
+        <div class="max-w-xl mx-auto bg-cardbg p-8 rounded-xl border border-gray-700">
+            <h3 class="text-xl font-bold mb-4">Leave a Review</h3>
+            <form action="/submit-review" method="POST">
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">Rating</label>
+                    <select name="rating" class="w-full bg-black border border-gray-600 rounded p-2 text-white">
+                        <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                        <option value="4">⭐⭐⭐⭐ (Good)</option>
+                        <option value="3">⭐⭐⭐ (Average)</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">Comment</label>
+                    <textarea name="comment" rows="3" required class="w-full bg-black border border-gray-600 rounded p-2 text-white" placeholder="Service kaisi lagi?"></textarea>
+                </div>
+                <button type="submit" class="bg-primary text-black font-bold px-6 py-2 rounded hover:bg-cyan-400 w-full">Submit Review</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="text-center">
+            <p class="text-gray-400">Review dene ke liye <a href="/login" class="text-primary underline">Login karein</a>.</p>
+        </div>
+        {% endif %}
     </div>
 </section>
 
 <section id="contact" class="py-20 container mx-auto px-6">
-    <div class="max-w-2xl mx-auto bg-gray-900 p-10 rounded-2xl border border-gray-800">
-        <h2 class="text-3xl font-bold text-center mb-8">Send a Query</h2>
+    <div class="max-w-2xl mx-auto bg-cardbg p-10 rounded-2xl border border-gray-800 shadow-2xl relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+        <h2 class="text-3xl font-bold text-center mb-8">Discuss Your Project</h2>
         
         <form action="/submit-query" method="POST" class="space-y-6">
             <div>
                 <label class="block mb-2 text-sm text-gray-400">Select Service</label>
                 <select name="service" class="w-full p-3 bg-black border border-gray-700 rounded-lg focus:border-primary outline-none text-white">
-                    <option>AI Marketing</option>
                     <option>Web Development</option>
-                    <option>Consultation</option>
+                    <option>Telegram Bot</option>
+                    <option>AI Marketing</option>
+                    <option>Graphic Design</option>
                 </select>
             </div>
             <div>
                 <label class="block mb-2 text-sm text-gray-400">Your Message</label>
-                <textarea name="message" rows="4" class="w-full p-3 bg-black border border-gray-700 rounded-lg focus:border-primary outline-none text-white" placeholder="Project details..."></textarea>
+                <textarea name="message" rows="4" class="w-full p-3 bg-black border border-gray-700 rounded-lg focus:border-primary outline-none text-white" placeholder="Tell us about your idea..."></textarea>
             </div>
             
             {% if user %}
@@ -81,9 +124,9 @@
                     Submit Query
                 </button>
             {% else %}
-                <div class="text-center">
+                <div class="text-center bg-gray-900 p-4 rounded border border-red-900">
                     <p class="text-red-400 mb-2">Login required to send queries</p>
-                    <a href="/login" class="inline-block bg-secondary px-6 py-2 rounded-lg text-white">Login with Google</a>
+                    <a href="/login" class="inline-block bg-secondary px-6 py-2 rounded-lg text-white text-sm">Login Now</a>
                 </div>
             {% endif %}
         </form>
