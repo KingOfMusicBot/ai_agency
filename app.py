@@ -143,6 +143,47 @@ def admin_panel():
     projects = list(db.projects.find().sort("date", -1))
     
     return render_template('admin.html', queries=queries, projects=projects, user=session['user'])
+    # --- AI TOOLS SECTION (NEW) ---
+import random
+
+@app.route('/tools')
+def tools_page():
+    user = session.get('user')
+    return render_template('tools.html', user=user)
+
+@app.route('/api/youtube-gen', methods=['POST'])
+def youtube_gen():
+    topic = request.form.get('topic')
+    
+    # Fake AI Logic (Bina API Key ke smart response)
+    titles = [
+        f"How to Master {topic} in 10 Minutes! 🚀",
+        f"The Truth About {topic} Nobody Tells You 😱",
+        f"{topic} Tutorial: Beginner to Pro Guide",
+        f"Top 5 Mistakes Everyone Makes in {topic}",
+        f"Why {topic} is the Future? (Watch Before It's Too Late)"
+    ]
+    
+    tags = f"#{topic} #{topic}2025 #Learn{topic} #Tech #{topic}Tips #ViralVideo #Trending"
+    
+    return render_template('tool_result.html', result_type="youtube", titles=titles, tags=tags)
+
+@app.route('/api/insta-gen', methods=['POST'])
+def insta_gen():
+    desc = request.form.get('desc')
+    
+    # Fake AI Logic
+    captions = [
+        f"Loving the vibes! ✨ {desc} #Goals",
+        f"Just another day doing what I love. 💫 ({desc})",
+        f"POV: {desc} 🚀 Let's keep grinding!",
+        f"Current mood: {desc} 🔥 Who else relates?"
+    ]
+    
+    hashtags = f"#ExplorePage #Trending #Viral #{desc.split()[0]} #DailyGrind #Inspiration #LifeStyle #FYP"
+    
+    return render_template('tool_result.html', result_type="instagram", captions=captions, hashtags=hashtags)
+    
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
