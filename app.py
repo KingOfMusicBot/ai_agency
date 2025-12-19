@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 import os
 import datetime
+from bson.objectid import ObjectId # Delete feature ke liye zaroori
 
 load_dotenv()
 
@@ -24,30 +25,28 @@ except Exception as e:
 @app.route('/')
 def home():
     user = session.get('user')
-    # Database se latest 6 Reviews nikaalein
     reviews = list(db.reviews.find().sort("date", -1).limit(6))
-    return render_template('index.html', user=user, reviews=reviews)
+    # Database se Projects nikaalo
+    projects = list(db.projects.find().sort("date", -1))
+    return render_template('index.html', user=user, reviews=reviews, projects=projects)
 
+# ... (Signup, Login, Logout, Dashboard wahi purane rahenge - No Change) ...
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
         password = request.form.get('password')
-
         if db.users.find_one({"email": email}):
-            flash("Email already registered! Please Login.")
+            flash("Email already registered!")
             return redirect(url_for('login'))
-
         hashed_password = generate_password_hash(password)
-        user_data = {
+        db.users.insert_one({
             "name": name, "email": email, "password": hashed_password,
             "role": "user", "created_at": datetime.datetime.now()
-        }
-        db.users.insert_one(user_data)
+        })
         session['user'] = {"name": name, "email": email, "role": "user"}
         return redirect(url_for('dashboard'))
-
     return render_template('signup.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -56,14 +55,12 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         user = db.users.find_one({"email": email})
-
         if user and check_password_hash(user['password'], password):
             session['user'] = {"name": user['name'], "email": user['email'], "role": user.get('role', 'user')}
             return redirect(url_for('dashboard'))
         else:
-            flash("❌ Ghalat Email ya Password!")
+            flash("❌ Wrong Credentials")
             return redirect(url_for('login'))
-
     return render_template('login.html')
 
 @app.route('/logout')
@@ -76,57 +73,67 @@ def dashboard():
     if 'user' not in session: return redirect(url_for('login'))
     return render_template('dashboard.html', user=session['user'])
 
-# --- QUERY SYSTEM ---
 @app.route('/submit-query', methods=['POST'])
 def submit_query():
-    if 'user' not in session:
-        flash("Please login to send a query.")
-        return redirect(url_for('login'))
-        
+    if 'user' not in session: return redirect(url_for('login'))
     data = request.form
     db.queries.insert_one({
-        "user_email": session['user']['email'],
-        "user_name": session['user']['name'],
-        "service_type": data.get('service'),
-        "message": data.get('message'),
-        "status": "Pending",
-        "date": datetime.datetime.now()
+        "user_email": session['user']['email'], "user_name": session['user']['name'],
+        "service_type": data.get('service'), "message": data.get('message'),
+        "status": "Pending", "date": datetime.datetime.now()
     })
-    flash("✅ Query Submitted! Hum jaldi contact karenge.")
+    flash("✅ Query Sent!")
     return redirect(url_for('dashboard'))
 
-# --- FEEDBACK SYSTEM (NEW) ---
 @app.route('/submit-review', methods=['POST'])
 def submit_review():
-    if 'user' not in session:
-        flash("Review dene ke liye Login karein.")
-        return redirect(url_for('login'))
-    
-    rating = request.form.get('rating')
-    comment = request.form.get('comment')
-    
+    if 'user' not in session: return redirect(url_for('login'))
     db.reviews.insert_one({
-        "user_name": session['user']['name'],
-        "rating": int(rating),
-        "comment": comment,
+        "user_name": session['user']['name'], "rating": int(request.form.get('rating')),
+        "comment": request.form.get('comment'), "date": datetime.datetime.now()
+    })
+    flash("⭐ Review Added!")
+    return redirect(url_for('home'))
+
+# --- NEW: PROJECT MANAGEMENT (ADMIN ONLY) ---
+@app.route('/add-project', methods=['POST'])
+def add_project():
+    if 'user' not in session or session['user']['email'] != "aapki_email@gmail.com":
+        return "Access Denied"
+    
+    db.projects.insert_one({
+        "title": request.form.get('title'),
+        "category": request.form.get('category'),
+        "image_url": request.form.get('image_url'),
+        "description": request.form.get('description'),
         "date": datetime.datetime.now()
     })
-    flash("⭐ Thanks for your feedback!")
-    return redirect(url_for('home'))
+    flash("✅ New Project Added!")
+    return redirect(url_for('admin_panel'))
+
+@app.route('/delete-project/<id>')
+def delete_project(id):
+    if 'user' not in session or session['user']['email'] != "aapki_email@gmail.com":
+        return "Access Denied"
+    
+    db.projects.delete_one({"_id": ObjectId(id)})
+    flash("🗑️ Project Deleted!")
+    return redirect(url_for('admin_panel'))
 
 # --- ADMIN PANEL ---
 @app.route('/admin')
 def admin_panel():
     if 'user' not in session: return redirect(url_for('login'))
-    
-    # YAHAN APNI EMAIL DALEIN
+    # YAHAN APNI EMAIL ID DALEIN
     admin_email = "rajkoushal862@gmail.com"
     
-    if session['user']['email'] != admin_email:
-        return "<h1>🚫 Access Denied!</h1>"
+    if session['user']['email'] != admin_email: return "🚫 Access Denied!"
 
     queries = list(db.queries.find().sort("date", -1))
-    return render_template('admin.html', queries=queries, user=session['user'])
+    # Projects bhi bhejein taki Admin unhe dekh/delete sake
+    projects = list(db.projects.find().sort("date", -1))
+    
+    return render_template('admin.html', queries=queries, projects=projects, user=session['user'])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
