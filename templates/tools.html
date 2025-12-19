@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-20">
+    <h1 class="text-4xl font-bold text-center mb-10">AI <span class="text-primary">Power Tools</span> ⚡</h1>
+    
+    <div class="grid md:grid-cols-2 gap-10">
+        
+        <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-[0_0_20px_rgba(255,0,0,0.2)]">
+            <h2 class="text-2xl font-bold text-red-500 mb-4"><i class="fab fa-youtube"></i> YouTube Viral Gen</h2>
+            <p class="text-gray-400 mb-6">Apne video ke liye Clickbait Titles aur Viral Tags banayein.</p>
+            
+            <form action="/api/youtube-gen" method="POST" target="result_frame">
+                <input type="text" name="topic" placeholder="Video Topic (e.g. Python Coding)" required class="w-full bg-black p-3 rounded border border-gray-700 text-white mb-4 focus:border-red-500 outline-none">
+                <button class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded transition">
+                    Generate Content
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 shadow-[0_0_20px_rgba(193,53,132,0.2)]">
+            <h2 class="text-2xl font-bold text-pink-500 mb-4"><i class="fab fa-instagram"></i> Insta Magic</h2>
+            <p class="text-gray-400 mb-6">Photo description se Captions aur Hashtags banayein.</p>
+            
+            <form action="/api/insta-gen" method="POST" target="result_frame">
+                <input type="text" name="desc" placeholder="Photo Description (e.g. Gym Workout)" required class="w-full bg-black p-3 rounded border border-gray-700 text-white mb-4 focus:border-pink-500 outline-none">
+                <button class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded transition">
+                    Create Magic
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <div class="mt-16">
+        <h3 class="text-2xl font-bold text-center mb-6">✨ AI Generated Result</h3>
+        <iframe name="result_frame" class="w-full h-80 bg-black/50 rounded-xl border border-gray-700" frameborder="0"></iframe>
+    </div>
+</div>
+{% endblock %}
