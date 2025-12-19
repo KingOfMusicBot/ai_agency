@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="h-screen flex justify-center items-center px-4">
+    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 w-full max-w-md shadow-2xl">
+        <h2 class="text-3xl font-bold text-center mb-6 text-white">Login</h2>
+        
+        <form action="/login" method="POST" class="space-y-6">
+            <div>
+                <label class="text-gray-400">Email Address</label>
+                <input type="email" name="email" required class="w-full p-3 bg-black border border-gray-700 rounded-lg text-white focus:border-primary outline-none">
+            </div>
+            <div>
+                <label class="text-gray-400">Password</label>
+                <input type="password" name="password" required class="w-full p-3 bg-black border border-gray-700 rounded-lg text-white focus:border-primary outline-none">
+            </div>
+            <button type="submit" class="w-full bg-primary text-black font-bold py-3 rounded-lg hover:bg-cyan-400 transition">
+                Login
+            </button>
+        </form>
+        <p class="text-center text-gray-500 mt-4">
+            Don't have an account? <a href="/signup" class="text-secondary hover:underline">Sign up</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
