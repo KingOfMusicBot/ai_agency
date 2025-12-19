@@ -1,119 +1,98 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from pymongo import MongoClient
-from authlib.integrations.flask_client import OAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 import os
 import datetime
 
-# Load environment variables (.env file se)
 load_dotenv()
 
 app = Flask(__name__)
-# Security Key (Zaroori hai session ke liye)
-app.secret_key = os.getenv("SECRET_KEY", "default_secret_key_agar_env_khali_ho")
+app.secret_key = os.getenv("SECRET_KEY", "super_secret_key")
 
-# --- 1. Database Connection (MongoDB) ---
+# --- Database Connection ---
 try:
     mongo_uri = os.getenv("MONGO_URI")
-    if not mongo_uri:
-        print("⚠️ Warning: MONGO_URI .env file mein nahi mila!")
-    
     client = MongoClient(mongo_uri)
-    db = client.ai_agency  # Database Name
+    db = client.ai_agency
     print("✅ MongoDB Connected Successfully!")
 except Exception as e:
-    print(f"❌ Database Connection Failed: {e}")
+    print(f"❌ Database Error: {e}")
 
-# --- 2. Google Login Setup ---
-oauth = OAuth(app)
-google = oauth.register(
-    name='google',
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    access_token_url='https://accounts.google.com/o/oauth2/token',
-    access_token_params=None,
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-    authorize_params=None,
-    api_base_url='https://www.googleapis.com/oauth2/v1/',
-    client_kwargs={'scope': 'openid email profile'},
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
-)
-
-# --- 3. Routes (Pages) ---
+# --- Routes ---
 
 @app.route('/')
 def home():
-    # Session check karein: User logged in hai ya nahi?
     user = session.get('user')
-    # index.html render karein aur user ka data bhejein
     return render_template('index.html', user=user)
 
-@app.route('/login')
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        # Check agar user pehle se hai
+        if db.users.find_one({"email": email}):
+            return "Email already registered! <a href='/login'>Login</a>"
+
+        # Password ko secure (hash) karna
+        hashed_password = generate_password_hash(password)
+
+        user_data = {
+            "name": name,
+            "email": email,
+            "password": hashed_password,
+            "role": "user",  # Default role
+            "created_at": datetime.datetime.now()
+        }
+        db.users.insert_one(user_data)
+        
+        # Auto login after signup
+        session['user'] = {"name": name, "email": email, "role": "user"}
+        return redirect(url_for('dashboard'))
+
+    return render_template('signup.html')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Google Login Page par redirect karein
-    redirect_uri = url_for('authorize', _external=True)
-    return google.authorize_redirect(redirect_uri)
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        user = db.users.find_one({"email": email})
+
+        # Password check karna
+        if user and check_password_hash(user['password'], password):
+            session['user'] = {
+                "name": user['name'], 
+                "email": user['email'],
+                "role": user.get('role', 'user')
+            }
+            return redirect(url_for('dashboard'))
+        else:
+            return "❌ Wrong Email or Password! <a href='/login'>Try Again</a>"
+
+    return render_template('login.html')
 
 @app.route('/logout')
 def logout():
-    # Session clear karein (Logout)
     session.pop('user', None)
     return redirect(url_for('home'))
-
-@app.route('/authorize')
-def authorize():
-    try:
-        # Google se wapas aane par token lein
-        token = google.authorize_access_token()
-        user_info = google.get('userinfo').json()
-        
-        # User ka data database mein save karein
-        users_col = db.users
-        user_data = {
-            "google_id": user_info['id'],
-            "name": user_info['name'],
-            "email": user_info['email'],
-            "picture": user_info['picture'],
-            "last_login": datetime.datetime.now()
-        }
-        
-        # Upsert: Agar user naya hai to create karein, purana hai to update karein
-        users_col.update_one({"google_id": user_info['id']}, {"$set": user_data}, upsert=True)
-        
-        # Session mein user save karein
-        session['user'] = user_data
-        return redirect(url_for('dashboard'))
-    except Exception as e:
-        return f"Login Error: {e}"
 
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
-        return redirect(url_for('home'))
-    
-    # Abhi ke liye simple dashboard (Baad mein iska HTML banayenge)
-    user = session['user']
-    return f"""
-    <div style='text-align:center; padding:50px; font-family:sans-serif;'>
-        <h1>Welcome, {user['name']}! 🚀</h1>
-        <img src='{user['picture']}' style='border-radius:50%; width:100px;'><br><br>
-        <p>Email: {user['email']}</p>
-        <p>Status: Active</p>
-        <br>
-        <a href='/' style='background:blue; color:white; padding:10px 20px; text-decoration:none;'>Go Home</a>
-        <a href='/logout' style='background:red; color:white; padding:10px 20px; text-decoration:none;'>Logout</a>
-    </div>
-    """
+        return redirect(url_for('login'))
+    return render_template('dashboard.html', user=session['user'])
 
 @app.route('/submit-query', methods=['POST'])
 def submit_query():
-    # Login check
     if 'user' not in session:
-        return "<h1>❌ Please Login First</h1><a href='/login'>Login Here</a>", 401
+        return redirect(url_for('login'))
         
     data = request.form
-    
-    # Query database ke liye document banayein
     query_doc = {
         "user_email": session['user']['email'],
         "user_name": session['user']['name'],
@@ -122,38 +101,23 @@ def submit_query():
         "status": "Pending",
         "date": datetime.datetime.now()
     }
-    
-    try:
-        db.queries.insert_one(query_doc)
-        return """
-        <div style='text-align:center; padding:50px; font-family:sans-serif;'>
-            <h1 style='color:green;'>✅ Query Submitted!</h1>
-            <p>Humari team jald hi aapse contact karegi.</p>
-            <a href='/'>Go Back</a>
-        </div>
-        """
-    except Exception as e:
-        return f"Error saving query: {e}"
-# --- ADMIN PANEL SECTION ---
+    db.queries.insert_one(query_doc)
+    return redirect(url_for('dashboard'))
+
+# --- ADMIN PANEL ---
 @app.route('/admin')
 def admin_panel():
-    # Security: Check karein user logged in hai ya nahi
     if 'user' not in session:
         return redirect(url_for('login'))
     
-    # Security: Sirf AAPKI email id hi admin panel dekh sake
-    # Is line mein apni asli Gmail ID daal dena
-    admin_email = "ksdofficial84@gmail.com" 
+    # Yahan apni Email ID dalein jo Admin banegi
+    admin_email = "aapki_email@gmail.com"
     
     if session['user']['email'] != admin_email:
-        return "<h1>🚫 Access Denied! Sirf Admin yahan aa sakta hai.</h1>"
+        return "<h1>🚫 Access Denied!</h1>"
 
-    # Database se saari queries nikaalo (Newest first)
     all_queries = list(db.queries.find().sort("date", -1))
-    
     return render_template('admin.html', queries=all_queries, user=session['user'])
-    
-# --- Server Start ---
+
 if __name__ == '__main__':
-    # 0.0.0.0 = Public Access
     app.run(host='0.0.0.0', port=5000, debug=True)
