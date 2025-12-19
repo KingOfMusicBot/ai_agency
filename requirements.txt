@@ -3,3 +3,4 @@ pymongo
 authlib
 requests
 python-dotenv
+groq
