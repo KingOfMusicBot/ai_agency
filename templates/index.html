@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="h-screen flex flex-col justify-center items-center text-center px-4 relative overflow-hidden">
+    <div class="absolute inset-0 bg-[url('https://source.unsplash.com/1600x900/?technology,ai')] bg-cover opacity-20"></div>
+    <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-white to-secondary bg-clip-text text-transparent">
+        Marketing on Autopilot
+    </h1>
+    <p class="text-xl md:text-2xl text-gray-400 mb-8 max-w-2xl">
+        Hum aapke business ko AI Tools, Data-Driven Strategies aur Automation ke saath 10x grow karte hain.
+    </p>
+    <a href="#contact" class="bg-primary text-black font-bold px-8 py-3 rounded-full text-lg hover:shadow-[0_0_20px_#00f2ff] transition">
+        Start Project
+    </a>
+</section>
+
+<section id="services" class="py-20 container mx-auto px-6">
+    <h2 class="text-4xl font-bold text-center mb-16"><span class="text-secondary">Our</span> Services</h2>
+    <div class="grid md:grid-cols-3 gap-10">
+        <div class="p-8 bg-gray-900 rounded-2xl border border-gray-800 hover:border-primary transition group">
+            <i class="fas fa-robot text-4xl text-primary mb-4 group-hover:scale-110 transition"></i>
+            <h3 class="text-2xl font-bold mb-2">AI Chatbots</h3>
+            <p class="text-gray-400">24/7 Customer support automation jo kabhi sota nahi.</p>
+        </div>
+        <div class="p-8 bg-gray-900 rounded-2xl border border-gray-800 hover:border-secondary transition group">
+            <i class="fas fa-chart-line text-4xl text-secondary mb-4 group-hover:scale-110 transition"></i>
+            <h3 class="text-2xl font-bold mb-2">Data Analytics</h3>
+            <p class="text-gray-400">Customer behavior predict karein aur sales badhayein.</p>
+        </div>
+        <div class="p-8 bg-gray-900 rounded-2xl border border-gray-800 hover:border-pink-500 transition group">
+            <i class="fas fa-bullhorn text-4xl text-pink-500 mb-4 group-hover:scale-110 transition"></i>
+            <h3 class="text-2xl font-bold mb-2">Smart Ads</h3>
+            <p class="text-gray-400">AI se optimize kiye gaye High-ROI Facebook ads.</p>
+        </div>
+    </div>
+</section>
+
+<section id="portfolio" class="py-20 bg-black/50">
+    <div class="container mx-auto px-6">
+        <h2 class="text-4xl font-bold text-center mb-16">Featured <span class="text-primary">Projects</span></h2>
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="relative group overflow-hidden rounded-xl">
+                <img src="https://source.unsplash.com/600x400/?coding" class="w-full transition duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-black/80 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition duration-300">
+                    <h3 class="text-2xl font-bold text-primary">E-Commerce AI</h3>
+                    <p class="text-gray-300">Sales Prediction Model</p>
+                </div>
+            </div>
+            <div class="relative group overflow-hidden rounded-xl">
+                <img src="https://source.unsplash.com/600x400/?marketing" class="w-full transition duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-black/80 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition duration-300">
+                    <h3 class="text-2xl font-bold text-secondary">Auto-Responder Bot</h3>
+                    <p class="text-gray-300">WhatsApp Automation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="contact" class="py-20 container mx-auto px-6">
+    <div class="max-w-2xl mx-auto bg-gray-900 p-10 rounded-2xl border border-gray-800">
+        <h2 class="text-3xl font-bold text-center mb-8">Send a Query</h2>
+        
+        <form action="/submit-query" method="POST" class="space-y-6">
+            <div>
+                <label class="block mb-2 text-sm text-gray-400">Select Service</label>
+                <select name="service" class="w-full p-3 bg-black border border-gray-700 rounded-lg focus:border-primary outline-none text-white">
+                    <option>AI Marketing</option>
+                    <option>Web Development</option>
+                    <option>Consultation</option>
+                </select>
+            </div>
+            <div>
+                <label class="block mb-2 text-sm text-gray-400">Your Message</label>
+                <textarea name="message" rows="4" class="w-full p-3 bg-black border border-gray-700 rounded-lg focus:border-primary outline-none text-white" placeholder="Project details..."></textarea>
+            </div>
+            
+            {% if user %}
+                <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold py-3 rounded-lg hover:opacity-90 transition">
+                    Submit Query
+                </button>
+            {% else %}
+                <div class="text-center">
+                    <p class="text-red-400 mb-2">Login required to send queries</p>
+                    <a href="/login" class="inline-block bg-secondary px-6 py-2 rounded-lg text-white">Login with Google</a>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+</section>
+
+{% endblock %}
